@@ -18,7 +18,7 @@ CORS(app)
 
 # Global variables for playlist management
 current_directory = None
-current_playlist = [] # Stores full paths on server
+current_playlist = []  # Stores full paths on server
 audio_file_map = {}  # Maps filename to full path for nested directories
 SUPPORTED_AUDIO_EXTENSIONS = ('.mp3', '.wav', '.ogg')
 
@@ -28,6 +28,7 @@ parsed_transcription_data = {}
 # Global variables for CSV error labeling
 csv_error_data = []
 csv_file_loaded = False
+
 
 def time_to_seconds(time_str):
     """Convert HH:MM:SS format to seconds"""
@@ -43,6 +44,7 @@ def time_to_seconds(time_str):
         return float(time_str)  # Try direct conversion as fallback
     except (ValueError, AttributeError):
         return 0.0
+
 
 def parse_log_content(log_content):
     """
@@ -106,6 +108,7 @@ def parse_log_content(log_content):
         data[filename].append(segment)
     return data
 
+
 @app.route('/audio_files/<path:filename>')
 def serve_audio_file(filename):
     """
@@ -151,17 +154,24 @@ def serve_audio_segment():
         with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as tmpf:
             seg_audio.export(tmpf.name, format='wav')
             tmpf.flush()
-            return send_file(tmpf.name, mimetype='audio/wav', as_attachment=False, download_name=f'{filename}_segment.wav')
+            return send_file(
+                tmpf.name,
+                mimetype='audio/wav',
+                as_attachment=False,
+                download_name=f'{filename}_segment.wav',
+            )
     except Exception as e:
         app.logger.error(f"Error extracting audio segment: {e}")
         return f"Error extracting audio segment: {str(e)}", 500
+
 
 @app.route('/')
 def index():
     """
     Renders the main HTML page for the client-side audio player.
     """
-    return render_template('index.html') 
+    return render_template('index.html')
+
 
 @app.route('/select_directory', methods=['POST'])
 def select_directory():
@@ -216,6 +226,7 @@ def select_directory():
         "files_with_info": files_with_transcription_info
     })
 
+
 @app.route('/upload_log', methods=['POST'])
 def upload_log():
     """
@@ -245,6 +256,7 @@ def upload_log():
     except Exception as e:
         app.logger.error(f"Error parsing uploaded log file: {e}")
         return jsonify({"success": False, "message": f"Error parsing uploaded log file: {str(e)}"})
+
 
 @app.route('/load_log_from_path', methods=['POST'])
 def load_log_from_path():
