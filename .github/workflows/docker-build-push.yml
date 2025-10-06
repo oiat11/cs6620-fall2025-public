@@ -3,7 +3,7 @@ name: Docker Build, Push and Deploy to EC2
 on:
   push:
     branches:
-      - week02
+      - main
 
 jobs:
   build-and-push:
@@ -75,7 +75,7 @@ jobs:
             docker run -d \
               --name cs6620-app \
               --restart unless-stopped \
-              -p 5000:5000 \
+              -p 80:5000 \
               ${{ secrets.DOCKERHUB_USERNAME }}/cs6620-app:latest
             
             # Clean up old images
