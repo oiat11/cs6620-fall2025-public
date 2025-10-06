@@ -1,9 +1,9 @@
-name: Docker Build and Push
+name: Docker Build, Push and Deploy to EC2
 
 on:
   push:
     branches:
-      - week02
+      - main
 
 jobs:
   build-and-push:
@@ -46,3 +46,40 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  deploy-to-ec2:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    
+    steps:
+      # Step 1: Deploy to EC2 via SSH
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          script: |
+            # Login to Docker Hub
+            echo ${{ secrets.DOCKERHUB_TOKEN }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+            
+            # Stop and remove old container if exists
+            docker stop cs6620-app || true
+            docker rm cs6620-app || true
+            
+            # Pull the latest image
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/cs6620-app:latest
+            
+            # Run the new container
+            docker run -d \
+              --name cs6620-app \
+              --restart unless-stopped \
+              -p 5000:5000 \
+              ${{ secrets.DOCKERHUB_USERNAME }}/cs6620-app:latest
+            
+            # Clean up old images
+            docker image prune -f
+            
+            # Verify container is running
+            docker ps | grep cs6620-app
