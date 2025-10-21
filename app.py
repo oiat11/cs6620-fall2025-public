@@ -109,6 +109,10 @@ def parse_log_content(log_content):
     return data
 
 
+@app.route('/')
+def hello():
+    return 'Hello from Automated CI/CD Pipeline! Version 2.0'
+
 @app.route('/audio_files/<path:filename>')
 def serve_audio_file(filename):
     """
